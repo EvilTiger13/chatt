@@ -1,0 +1,14 @@
+{
+  "name": "chatt",
+  "version": "2.0.0",
+  "description": "Enkel meddelandeapp för att öva DevOps: konton, sök, privata chattar, databas, Docker, CI/CD",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "test": "node --no-warnings --test"
+  },
+  "engines": { "node": ">=22.13" },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
