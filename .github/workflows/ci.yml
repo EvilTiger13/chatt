@@ -1,44 +1,27 @@
-// Tester: startar servern med en tillfällig databas i minnet.
-const test = require('node:test');
-const assert = require('node:assert');
-const { createServer } = require('../server');
-const { openDb } = require('../db');
+name: CI
 
-async function start() {
-  const server = createServer(openDb(':memory:')).listen(0);
-  const base = `http://localhost:${server.address().port}`;
-  const api = async (path, { token, body } = {}) => {
-    const res = await fetch(base + path, {
-      method: body ? 'POST' : 'GET',
-      headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
-      body: body && JSON.stringify(body),
-    });
-    return { status: res.status, data: await res.json() };
-  };
-  return { server, api };
-}
+on:
+  push:
+    branches: [main]
+  pull_request:
 
-test('/health svarar ok', async () => {
-  const { server, api } = await start();
-  const { status, data } = await api('/health');
-  assert.strictEqual(status, 200);
-  assert.strictEqual(data.status, 'ok');
-  server.close();
-});
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hämta koden
+        uses: actions/checkout@v4
 
-test('registrera, logga in och söka användare', async () => {
-  const { server, api } = await start();
-  const a = await api('/api/register', { body: { username: 'danik', displayName: 'Danik', password: 'hemligt1' } });
-  assert.strictEqual(a.status, 201);
-  await api('/api/register', { body: { username: 'vasja', displayName: 'Vasja', password: 'hemligt2' } });
+      - name: Installera Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-  const dup = await api('/api/register', { body: { username: 'danik', displayName: 'X', password: 'hemligt3' } });
-  assert.strictEqual(dup.status, 409);
+      - name: Installera beroenden
+        run: npm install
 
-  const bad = await api('/api/login', { body: { username: 'danik', password: 'fel' } });
-  assert.strictEqual(bad.status, 401);
+      - name: Kör tester
+        run: npm test
 
-  const search = await api('/api/search?q=va', { token: a.data.token });
-  assert.deepStrictEqual(search.data, [{ username: 'vasja', displayName: 'Vasja' }]);
-  server.close();
-});
+      - name: Bygg Docker-image
+        run: docker build -t chatt:${{ github.sha }} .
