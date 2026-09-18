@@ -1,3 +1,4 @@
+# CI: körs automatiskt vid varje push till GitHub
 name: CI
 
 on:

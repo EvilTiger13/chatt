@@ -2,272 +2,234 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d2a2f">
 <title>Chatt</title>
-<style>
-  :root {
-    --bg: #1d2a2f; --panel: #243539; --line: #34494e; --hover: #2c3f44;
-    --text: #e6ecea; --muted: #8fa5a3; --me: #3d7a6e; --them: #2e4247; --accent: #f2c14e;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; height: 100vh; background: var(--bg); color: var(--text);
-    font: 16px/1.45 "Segoe UI", system-ui, sans-serif; }
-  button { background: var(--accent); color: #1d2a2f; border: 0; border-radius: 8px;
-    padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; }
-  button.plain { background: none; color: var(--muted); padding: 6px 8px; font-weight: 400; }
-  input { background: var(--bg); color: var(--text); border: 1px solid var(--line);
-    border-radius: 8px; padding: 10px 12px; font: inherit; width: 100%; }
-  input:focus-visible, button:focus-visible, .row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .hidden { display: none !important; }
-  .error { color: #ff9b85; font-size: 14px; min-height: 20px; margin: 0; }
-
-  /* Inloggning */
-  #auth { height: 100vh; display: grid; place-items: center; padding: 20px; }
-  #auth form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
-  #auth h1 { margin: 0 0 4px; font-size: 32px; }
-  #auth p.lead { margin: 0 0 8px; color: var(--muted); }
-  label { font-size: 14px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
-
-  /* Appen */
-  #app { height: 100vh; display: grid; grid-template-columns: 300px 1fr; }
-  aside { border-right: 1px solid var(--line); background: var(--panel); display: flex;
-    flex-direction: column; min-height: 0; }
-  .me { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex;
-    justify-content: space-between; align-items: center; }
-  .me strong { display: block; }
-  .me small, .row small { color: var(--muted); }
-  .search { padding: 12px 16px; }
-  .list { flex: 1; overflow-y: auto; }
-  .list h2 { font-size: 14px; font-weight: 400; color: var(--muted); margin: 8px 16px; }
-  .row { display: block; width: 100%; text-align: left; background: none; color: var(--text);
-    border-radius: 0; padding: 10px 16px; font-weight: 400; }
-  .row:hover { background: var(--hover); }
-  .row.active { background: var(--hover); box-shadow: inset 3px 0 var(--accent); }
-  .row .top { display: flex; justify-content: space-between; gap: 8px; }
-  .row .preview { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hint { color: var(--muted); padding: 8px 16px; font-size: 14px; }
-
-  main { display: flex; flex-direction: column; min-height: 0; }
-  .chat-head { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
-  .chat-head small { color: var(--muted); }
-  #back { display: none; }
-  #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .msg { max-width: 70%; padding: 8px 12px; border-radius: 12px; background: var(--them);
-    align-self: flex-start; white-space: pre-wrap; word-wrap: break-word; }
-  .msg.mine { background: var(--me); align-self: flex-end; }
-  .msg time { display: block; font-size: 11px; color: var(--muted); text-align: right; }
-  .msg.mine time { color: #cfe3de; }
-  .empty { margin: auto; color: var(--muted); text-align: center; padding: 20px; }
-  #send { display: flex; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); background: var(--panel); }
-
-  @media (max-width: 700px) {
-    #app { grid-template-columns: 1fr; }
-    #app.chatting aside { display: none; }
-    #app:not(.chatting) main { display: none; }
-    #back { display: inline-block; }
-    .msg { max-width: 88%; }
-  }
-</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23f2c14e%22/%3E%3Cpath d=%22M8 10h16v10H14l-6 4z%22 fill=%22%231d2a2f%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/app.css">
 </head>
 <body>
 
-<section id="auth">
-  <form id="auth-form">
+<!-- ============ Inloggning / registrering / verifiering ============ -->
+<section id="auth" class="hidden">
+  <form id="login-form">
     <h1>Chatt</h1>
-    <p class="lead" id="auth-lead">Logga in för att fortsätta.</p>
-    <label id="name-field" class="hidden">Ditt namn
-      <input id="f-name" maxlength="40" autocomplete="name">
+    <p class="lead">Logga in för att fortsätta.</p>
+    <label class="field">Användarnamn eller e-post
+      <input name="login" autocomplete="username" required>
     </label>
-    <label>Användarnamn
-      <input id="f-user" maxlength="20" autocomplete="username" required>
+    <label class="field">Lösenord
+      <input name="password" type="password" autocomplete="current-password" required>
     </label>
-    <label>Lösenord
-      <input id="f-pass" type="password" autocomplete="current-password" required>
+    <p class="error"></p>
+    <button class="primary" type="submit">Logga in</button>
+    <button class="link" type="button" data-go="register">Nytt här? Skapa konto</button>
+  </form>
+
+  <form id="register-form" class="hidden">
+    <h1>Skapa konto</h1>
+    <p class="lead">Vi skickar en kod till din e-post för att bekräfta kontot.</p>
+    <label class="field">E-post
+      <input name="email" type="email" autocomplete="email" required>
     </label>
-    <p class="error" id="auth-error"></p>
-    <button type="submit" id="auth-submit">Logga in</button>
-    <button type="button" class="plain" id="auth-toggle">Nytt här? Skapa konto</button>
+    <label class="field">Ditt namn
+      <input name="displayName" maxlength="40" autocomplete="name" required>
+    </label>
+    <label class="field">Användarnamn (andra hittar dig med det)
+      <input name="username" maxlength="20" autocomplete="username" pattern="[a-zA-Z0-9_]{3,20}" required>
+    </label>
+    <label class="field">Lösenord (minst 8 tecken)
+      <input name="password" type="password" minlength="8" autocomplete="new-password" required>
+    </label>
+    <p class="error"></p>
+    <button class="primary" type="submit">Skapa konto</button>
+    <button class="link" type="button" data-go="login">Har du redan konto? Logga in</button>
+  </form>
+
+  <form id="verify-form" class="hidden">
+    <h1>Bekräfta e-post</h1>
+    <p class="lead">Vi har skickat en 6-siffrig kod till <strong id="verify-email"></strong>. Koden gäller i 15 minuter.</p>
+    <label class="field">Kod
+      <input name="code" class="code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+    </label>
+    <p class="error"></p>
+    <button class="primary" type="submit">Bekräfta</button>
+    <button class="link" type="button" id="resend">Skicka en ny kod</button>
+    <button class="link" type="button" data-go="login">Tillbaka till inloggning</button>
   </form>
 </section>
 
+<!-- ============ Själva appen ============ -->
 <section id="app" class="hidden">
   <aside>
-    <div class="me">
-      <div><strong id="me-name"></strong><small id="me-user"></small></div>
-      <button class="plain" id="logout">Logga ut</button>
+    <div class="side-head">
+      <div id="me-avatar"></div>
+      <div class="who"><strong id="me-name"></strong><small id="me-user"></small></div>
+      <button class="icon" id="menu-btn" aria-label="Meny">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
     </div>
-    <div class="search"><input id="search" placeholder="Sök användarnamn" autocomplete="off"></div>
+    <div class="search"><input id="search" placeholder="Sök användarnamn" autocomplete="off" aria-label="Sök användarnamn"></div>
     <div class="list">
       <div id="results" class="hidden"></div>
       <div id="convos"></div>
     </div>
   </aside>
+
   <main>
     <div class="chat-head">
-      <button class="plain" id="back" aria-label="Tillbaka">←</button>
-      <div><strong id="chat-name">Ingen chatt vald</strong> <small id="chat-user"></small></div>
+      <button class="icon" id="back" aria-label="Tillbaka">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div id="chat-avatar"></div>
+      <button class="who" id="chat-who" style="text-align:left" aria-label="Visa profil">
+        <strong id="chat-name">Ingen chatt vald</strong>
+        <small id="chat-status"></small>
+      </button>
+      <button class="icon hidden" id="call-audio" aria-label="Röstsamtal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/></svg>
+      </button>
+      <button class="icon hidden" id="call-video" aria-label="Videosamtal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+      </button>
     </div>
+
     <div id="messages"><p class="empty">Sök efter ett användarnamn till vänster för att starta en chatt.</p></div>
-    <form id="send" class="hidden">
-      <input id="text" placeholder="Skriv ett meddelande" maxlength="2000" autocomplete="off" required>
-      <button type="submit">Skicka</button>
-    </form>
+
+    <div class="composer-wrap hidden" id="composer-wrap">
+      <div class="bar hidden" id="reply-bar">
+        <div class="text"><strong id="reply-title"></strong><span id="reply-text"></span></div>
+        <button class="icon" id="reply-cancel" type="button" aria-label="Avbryt">✕</button>
+      </div>
+      <form id="composer">
+        <button class="icon" type="button" id="attach" aria-label="Bifoga fil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9"/></svg>
+        </button>
+        <textarea id="text" rows="1" placeholder="Skriv ett meddelande" maxlength="4000" aria-label="Meddelande"></textarea>
+        <div class="recording hidden" id="recording">
+          <span class="dot"></span><span id="rec-time">0:00</span><span class="muted">Spelar in…</span>
+        </div>
+        <button class="icon hidden" type="button" id="rec-cancel" aria-label="Avbryt inspelning">✕</button>
+        <button class="icon" type="button" id="mic" aria-label="Spela in röstmeddelande">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
+        </button>
+        <button class="icon hidden" type="submit" id="send-btn" aria-label="Skicka">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
+        </button>
+      </form>
+      <input type="file" id="file-input" hidden>
+    </div>
   </main>
 </section>
 
-<script>
-const $ = (id) => document.getElementById(id);
-let token = localStorage.getItem('token');
-let me = null;
-let current = null;   // användarnamn i öppen chatt
-let socket = null;
-let registering = false;
+<!-- ============ Menyer ============ -->
+<div class="menu hidden" id="main-menu" role="menu">
+  <button data-open="profile">👤 Profil</button>
+  <button data-open="privacy">🔒 Integritet</button>
+  <button data-open="account">⚙️ Konto</button>
+  <button id="logout" class="warn">↩ Logga ut</button>
+</div>
+<div class="menu hidden" id="msg-menu" role="menu">
+  <button data-act="reply">↩ Svara</button>
+  <button data-act="copy">📋 Kopiera</button>
+  <button data-act="edit">✏️ Redigera</button>
+  <button data-act="delete" class="warn">🗑 Radera</button>
+</div>
 
-async function api(path, body) {
-  const res = await fetch(path, {
-    method: body ? 'POST' : 'GET',
-    headers: { 'Content-Type': 'application/json', ...(token && { Authorization: 'Bearer ' + token }) },
-    body: body && JSON.stringify(body),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Något gick fel');
-  return data;
-}
+<!-- ============ Inställningar ============ -->
+<div class="overlay hidden" id="settings">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <header><h2 id="settings-title">Inställningar</h2><button class="icon" data-close aria-label="Stäng">✕</button></header>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="profile">Profil</button>
+      <button role="tab" data-tab="privacy">Integritet</button>
+      <button role="tab" data-tab="account">Konto</button>
+    </div>
 
-function fmtTime(iso) {
-  const d = new Date(iso), now = new Date();
-  return d.toDateString() === now.toDateString()
-    ? d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-    : d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
-}
+    <form class="content" data-panel="profile" id="profile-form">
+      <div class="avatar-edit">
+        <div id="profile-avatar"></div>
+        <div class="actions">
+          <button type="button" class="primary" id="avatar-change">Byt profilbild</button>
+          <button type="button" class="link" id="avatar-remove">Ta bort bild</button>
+        </div>
+        <input type="file" id="avatar-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+      </div>
+      <label class="field">Namn <input name="displayName" maxlength="40" required></label>
+      <label class="field">Om mig <textarea name="bio" rows="2" maxlength="200" placeholder="Några ord om dig"></textarea></label>
+      <label class="field">Användarnamn <input name="username" disabled></label>
+      <label class="field">E-post <input name="email" disabled></label>
+      <p class="saved"></p>
+      <button class="primary" type="submit">Spara</button>
+    </form>
 
-/* ---------- Inloggning / registrering ---------- */
-$('auth-toggle').onclick = () => {
-  registering = !registering;
-  $('name-field').classList.toggle('hidden', !registering);
-  $('f-name').required = registering;
-  $('auth-lead').textContent = registering ? 'Skapa ett konto. Andra hittar dig via ditt användarnamn.' : 'Logga in för att fortsätta.';
-  $('auth-submit').textContent = registering ? 'Skapa konto' : 'Logga in';
-  $('auth-toggle').textContent = registering ? 'Har du redan konto? Logga in' : 'Nytt här? Skapa konto';
-  $('auth-error').textContent = '';
-};
+    <form class="content hidden" data-panel="privacy" id="privacy-form">
+      <label class="switch"><input type="checkbox" name="searchable">
+        <span>Synas i sökningen<small>Andra kan hitta dig med ditt användarnamn.</small></span></label>
+      <label class="switch"><input type="checkbox" name="readReceipts">
+        <span>Läskvitton<small>Visa när du har läst meddelanden. Stänger du av det ser du inte heller andras.</small></span></label>
+      <label class="field">Vem får ringa mig
+        <select name="callsFrom">
+          <option value="everyone">Alla</option>
+          <option value="contacts">Bara personer jag har chattat med</option>
+          <option value="nobody">Ingen</option>
+        </select>
+      </label>
+      <p class="saved"></p>
+      <button class="primary" type="submit">Spara</button>
+    </form>
 
-$('auth-form').onsubmit = async (e) => {
-  e.preventDefault();
-  $('auth-error').textContent = '';
-  try {
-    const body = { username: $('f-user').value, password: $('f-pass').value };
-    if (registering) body.displayName = $('f-name').value;
-    const data = await api(registering ? '/api/register' : '/api/login', body);
-    token = data.token;
-    localStorage.setItem('token', token);
-    start(data.user);
-  } catch (err) { $('auth-error').textContent = err.message; }
-};
+    <form class="content hidden" data-panel="account" id="password-form">
+      <label class="field">Nuvarande lösenord <input name="current" type="password" autocomplete="current-password" required></label>
+      <label class="field">Nytt lösenord (minst 8 tecken) <input name="next" type="password" minlength="8" autocomplete="new-password" required></label>
+      <p class="error"></p><p class="saved"></p>
+      <button class="primary" type="submit">Byt lösenord</button>
+      <p class="muted" style="font-size:14px;margin:8px 0 0">När du byter lösenord loggas du ut på alla andra enheter.</p>
+    </form>
+  </div>
+</div>
 
-$('logout').onclick = async () => {
-  try { await api('/api/logout', {}); } catch {}
-  localStorage.removeItem('token');
-  location.reload();
-};
+<!-- ============ Profil för annan användare ============ -->
+<div class="overlay hidden" id="profile-view">
+  <div class="dialog" role="dialog" aria-modal="true" aria-label="Profil">
+    <header><h2>Profil</h2><button class="icon" data-close aria-label="Stäng">✕</button></header>
+    <div class="content profile-card" id="profile-card"></div>
+  </div>
+</div>
 
-/* ---------- Appen ---------- */
-function start(user) {
-  me = user;
-  $('me-name').textContent = me.displayName;
-  $('me-user').textContent = '@' + me.username;
-  $('auth').classList.add('hidden');
-  $('app').classList.remove('hidden');
-  loadConvos();
-  connect();
-}
+<!-- ============ Samtal ============ -->
+<div id="call" class="hidden">
+  <div class="stage">
+    <video id="remote-video" autoplay playsinline muted class="hidden"></video>
+    <audio id="remote-audio" autoplay></audio>
+    <div class="who">
+      <div id="call-avatar"></div>
+      <h2 id="call-name"></h2>
+      <p id="call-status"></p>
+    </div>
+    <video id="local-video" autoplay playsinline muted class="hidden"></video>
+  </div>
+  <div class="controls" id="call-incoming">
+    <div class="round-label"><button class="round hangup" id="call-reject" aria-label="Avvisa">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 15.5c5-5 13-5 18 0l-2.5 2.5-3.5-1.5V14a11 11 0 00-6 0v2.5L5.5 18z"/></svg></button>Avvisa</div>
+    <div class="round-label"><button class="round accept" id="call-accept" aria-label="Svara">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/></svg></button>Svara</div>
+  </div>
+  <div class="controls hidden" id="call-active">
+    <button class="round" id="call-mute" aria-label="Stäng av mikrofonen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
+    </button>
+    <button class="round" id="call-cam" aria-label="Stäng av kameran">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+    </button>
+    <button class="round hangup" id="call-hangup" aria-label="Lägg på">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 15.5c5-5 13-5 18 0l-2.5 2.5-3.5-1.5V14a11 11 0 00-6 0v2.5L5.5 18z"/></svg>
+    </button>
+  </div>
+</div>
 
-function connect() {
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  socket = new WebSocket(`${proto}://${location.host}/?token=${token}`);
-  socket.onmessage = (e) => {
-    const m = JSON.parse(e.data);
-    const other = m.sender === me.username ? m.recipient : m.sender;
-    if (other === current) addMessage(m);
-    loadConvos();
-  };
-  socket.onclose = (e) => { if (e.code !== 4001) setTimeout(connect, 2000); };
-}
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
 
-function userRow(u, extra = '') {
-  const b = document.createElement('button');
-  b.className = 'row' + (u.username === current ? ' active' : '');
-  b.innerHTML = '<div class="top"><span class="n"></span><small class="t"></small></div><div class="preview"></div>';
-  b.querySelector('.n').textContent = u.displayName;
-  b.querySelector('.preview').textContent = extra || '@' + u.username;
-  if (u.lastTime) b.querySelector('.t').textContent = fmtTime(u.lastTime);
-  b.onclick = () => openChat(u.username);
-  return b;
-}
-
-async function loadConvos() {
-  const list = await api('/api/conversations');
-  const box = $('convos');
-  box.innerHTML = '<h2>Chattar</h2>';
-  if (!list.length) box.insertAdjacentHTML('beforeend', '<p class="hint">Inga chattar än. Sök efter någons användarnamn ovan.</p>');
-  list.forEach((c) => box.appendChild(userRow(c, c.lastText)));
-}
-
-let searchTimer;
-$('search').oninput = () => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(async () => {
-    const term = $('search').value.trim();
-    const box = $('results');
-    if (!term) { box.classList.add('hidden'); return; }
-    const users = await api('/api/search?q=' + encodeURIComponent(term));
-    box.innerHTML = '<h2>Sökresultat</h2>';
-    if (!users.length) box.insertAdjacentHTML('beforeend', '<p class="hint">Ingen användare hittades.</p>');
-    users.forEach((u) => box.appendChild(userRow(u)));
-    box.classList.remove('hidden');
-  }, 250);
-};
-
-async function openChat(username) {
-  current = username;
-  const data = await api('/api/messages/' + username);
-  $('chat-name').textContent = data.user.displayName;
-  $('chat-user').textContent = '@' + data.user.username;
-  $('messages').innerHTML = '';
-  if (!data.messages.length) $('messages').innerHTML = '<p class="empty">Inga meddelanden än. Säg hej!</p>';
-  data.messages.forEach(addMessage);
-  $('send').classList.remove('hidden');
-  $('app').classList.add('chatting');
-  $('search').value = '';
-  $('results').classList.add('hidden');
-  loadConvos();
-  $('text').focus();
-}
-
-function addMessage(m) {
-  $('messages').querySelector('.empty')?.remove();
-  const el = document.createElement('div');
-  el.className = 'msg' + (m.sender === me.username ? ' mine' : '');
-  el.textContent = m.text;
-  const t = document.createElement('time');
-  t.textContent = fmtTime(m.time);
-  el.appendChild(t);
-  $('messages').appendChild(el);
-  $('messages').scrollTop = $('messages').scrollHeight;
-}
-
-$('send').onsubmit = (e) => {
-  e.preventDefault();
-  const text = $('text').value.trim();
-  if (!text || !current) return;
-  socket.send(JSON.stringify({ to: current, text }));
-  $('text').value = '';
-};
-
-$('back').onclick = () => { $('app').classList.remove('chatting'); current = null; loadConvos(); };
-
-/* ---------- Start: redan inloggad? ---------- */
-if (token) api('/api/me').then(start).catch(() => localStorage.removeItem('token'));
-</script>
+<script src="/app.js"></script>
 </body>
 </html>

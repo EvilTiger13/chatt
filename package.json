@@ -1,7 +1,7 @@
 {
   "name": "chatt",
-  "version": "2.0.0",
-  "description": "Enkel meddelandeapp för att öva DevOps: konton, sök, privata chattar, databas, Docker, CI/CD",
+  "version": "3.0.0",
+  "description": "Meddelandeapp för att öva DevOps: konton med e-postverifiering, privata chattar, filer, röst- och videosamtal",
   "main": "server.js",
   "scripts": {
     "start": "node --no-warnings server.js",
@@ -9,6 +9,7 @@
   },
   "engines": { "node": ">=22.13" },
   "dependencies": {
+    "nodemailer": "^10.0.0",
     "ws": "^8.18.0"
   }
 }
